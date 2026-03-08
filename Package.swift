@@ -9,13 +9,15 @@ let package = Package(
         .macOS(.v15)
     ],
     dependencies: [
-        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", from: "0.11.0")
+        .package(url: "https://github.com/modelcontextprotocol/swift-sdk.git", from: "0.11.0"),
+        .package(url: "https://github.com/groue/GRDB.swift.git", from: "7.10.0")
     ],
     targets: [
         .executableTarget(
             name: "HealthCheck",
             dependencies: [
-                .product(name: "MCP", package: "swift-sdk")
+                .product(name: "MCP", package: "swift-sdk"),
+                .product(name: "GRDB", package: "GRDB.swift")
             ]
         ),
     ]
