@@ -1,3 +1,7 @@
+![Beta](https://img.shields.io/badge/status-beta-orange)
+![macOS](https://img.shields.io/badge/platform-macOS_26-blue)
+![AI](https://img.shields.io/badge/AI-MCP_powered-purple)
+
 Better than basic RAG or Context Window Stuffing for health data
 
 # HealthCheck
