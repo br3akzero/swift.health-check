@@ -13,11 +13,13 @@ let package = Package(
         .package(url: "https://github.com/groue/GRDB.swift.git", from: "7.10.0")
     ],
     targets: [
+        .target(name: "PDF"),
         .executableTarget(
             name: "HealthCheck",
             dependencies: [
                 .product(name: "MCP", package: "swift-sdk"),
-                .product(name: "GRDB", package: "GRDB.swift")
+                .product(name: "GRDB", package: "GRDB.swift"),
+                "PDF"
             ]
         ),
     ]
