@@ -5,6 +5,12 @@ import PDF
 
 struct IngestService {
     let db: DatabaseManager
+    let extractor: DocumentExtractor
+
+    init(db: DatabaseManager, extractor: DocumentExtractor = PDFDocumentExtractor()) {
+        self.db = db
+        self.extractor = extractor
+    }
 
     func ingest(filePath: String, patientId: Int64) async throws -> IngestResult {
         let url = URL(fileURLWithPath: filePath)
@@ -15,7 +21,7 @@ struct IngestService {
         }
 
         let documentId = try await createDocument(filePath: filePath, fileHash: fileHash, fileName: url.lastPathComponent, patientId: patientId)
-        let pages = try await extractAndReconcile(url: url)
+        let pages = try await extractor.extract(from: url)
         let chunks = chunkPages(pages)
         try await storeChunks(chunks, documentId: documentId)
         let rawText = pages.map { $0.text }.joined(separator: "\n\n")
@@ -34,20 +40,6 @@ struct IngestService {
         try await db.dbQueue.read { db in
             try Document.filter(Column("file_hash") == hash).fetchOne(db)?.id
         }
-    }
-
-    private func extractAndReconcile(url: URL) async throws -> [ReconciledPage] {
-        let parser = PDFParser()
-        let reconciler = TextReconciler()
-        let stream = try parser.extract(from: url)
-
-        var pages: [ReconciledPage] = []
-        for try await extraction in stream {
-            let reconciled = reconciler.reconcile(page: extraction)
-            pages.append(reconciled)
-        }
-
-        return pages
     }
 
     private func chunkPages(_ pages: [ReconciledPage]) -> [TextChunk] {
