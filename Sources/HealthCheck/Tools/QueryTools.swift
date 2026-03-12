@@ -42,6 +42,7 @@ struct QueryTools {
 extension QueryTools {
     func jsonResult(_ value: some Encodable) throws -> CallTool.Result {
         let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let json = String(data: try encoder.encode(value), encoding: .utf8) ?? "[]"
         return .init(content: [.text(json)], isError: false)

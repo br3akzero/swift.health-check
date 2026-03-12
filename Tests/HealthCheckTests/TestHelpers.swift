@@ -84,6 +84,13 @@ func extractJSON(from result: CallTool.Result?) -> [String: Any]? {
     return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
 }
 
+func extractJSONArray(from result: CallTool.Result?) -> [[String: Any]]? {
+    guard let result,
+          case .text(let json) = result.content.first,
+          let data = json.data(using: .utf8) else { return nil }
+    return try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+}
+
 func makeDocument(patientId: Int64, fileHash: String = "abc123") -> Document {
     let ts = timestamp()
     return Document(
