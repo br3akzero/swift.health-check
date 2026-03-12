@@ -34,3 +34,6 @@ await registry.registerAll()
 
 let transport = StdioTransport()
 try await server.start(transport: transport)
+
+// Keep the process alive while the server runs
+await server.waitUntilCompleted()
