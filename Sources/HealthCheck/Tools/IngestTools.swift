@@ -51,13 +51,50 @@ struct IngestTools {
 private extension IngestTools {
     func ingestDocument(_ params: CallTool.Parameters) async throws -> CallTool.Result {
         guard let args = params.arguments,
-              case .string(let filePath) = args["file_path"],
-              case .int(let patientId) = args["patient_id"] else {
+              let filePath = stringArg(args, "file_path"),
+              let patientId = intArg(args, "patient_id") else {
             return .init(content: [.text("Missing required parameters: file_path (string), patient_id (integer)")], isError: true)
         }
 
+        // Validate file
+        let fileURL = URL(fileURLWithPath: filePath)
+        guard FileManager.default.fileExists(atPath: filePath) else {
+            return .init(content: [.text("File not found: \(filePath)")], isError: true)
+        }
+        guard fileURL.pathExtension.lowercased() == "pdf" else {
+            return .init(content: [.text("File is not a PDF: \(fileURL.lastPathComponent)")], isError: true)
+        }
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: filePath),
+           let size = attrs[.size] as? Int64, size > 250 * 1024 * 1024 {
+            return .init(content: [.text("File too large (\(size / 1024 / 1024) MB). Maximum is 250 MB.")], isError: true)
+        }
+
+        // Validate patient exists
+        let patientExists = try await db.dbQueue.read { db in
+            try Patient.fetchOne(db, key: patientId) != nil
+        }
+        guard patientExists else {
+            return .init(content: [.text("Patient not found: \(patientId)")], isError: true)
+        }
+
         let service = IngestService(db: db)
-        let result = try await service.ingest(filePath: filePath, patientId: Int64(patientId))
+        let result: IngestResult
+        do {
+            result = try await service.ingest(filePath: filePath, patientId: patientId)
+        } catch {
+            // Try to mark the document as failed if it was created before the error
+            try? await db.dbQueue.write { db in
+                let errorMessage = "\(error)"
+                try db.execute(
+                    sql: """
+                        UPDATE document SET processing_status = 'failed', processing_error = ?, updated_at = ?
+                        WHERE file_path = ? AND processing_status = 'processing'
+                        """,
+                    arguments: [errorMessage, ISO8601DateFormatter().string(from: .now), filePath]
+                )
+            }
+            return .init(content: [.text("Ingestion failed: \(error)")], isError: true)
+        }
 
         let response: [String: Any] = [
             "document_id": result.documentId,
@@ -74,11 +111,9 @@ private extension IngestTools {
 
     func getDocumentText(_ params: CallTool.Parameters) async throws -> CallTool.Result {
         guard let args = params.arguments,
-              case .int(let documentId) = args["document_id"] else {
+              let docId = intArg(args, "document_id") else {
             return .init(content: [.text("Missing required parameter: document_id (integer)")], isError: true)
         }
-
-        let docId = Int64(documentId)
 
         let document = try await db.dbQueue.read { db in
             try Document.fetchOne(db, key: docId)
