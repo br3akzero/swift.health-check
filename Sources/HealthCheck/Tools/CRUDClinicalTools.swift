@@ -39,12 +39,16 @@ func stringArg(_ args: [String: Value], _ key: String) -> String? {
 }
 
 func intArg(_ args: [String: Value], _ key: String) -> Int64? {
-    if case .int(let v) = args[key] { Int64(v) } else { nil }
+    if case .int(let v) = args[key] { Int64(v) }
+    else if case .double(let v) = args[key] { Int64(v) }
+    else if case .string(let v) = args[key] { Int64(v) }
+    else { nil }
 }
 
 func doubleArg(_ args: [String: Value], _ key: String) -> Double? {
     if case .double(let v) = args[key] { v }
     else if case .int(let v) = args[key] { Double(v) }
+    else if case .string(let v) = args[key] { Double(v) }
     else { nil }
 }
 
