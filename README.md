@@ -1,8 +1,11 @@
 ![POC](https://img.shields.io/badge/status-proof_of_concept-orange)
 ![macOS](https://img.shields.io/badge/platform-macOS_26-blue)
 ![AI](https://img.shields.io/badge/AI-MCP_powered-purple)
+![Local LLMs](https://img.shields.io/badge/privacy-local_LLMs_only-green)
 
 # HealthCheck
+
+> **Privacy notice:** This project is designed for use with small, local LLMs running on your own hardware (e.g. Ollama, llama.cpp, LM Studio). It is **not intended** for use with cloud-hosted enterprise models such as OpenAI, Anthropic, Google, xAI, or any other provider that processes data on external servers. Health records are sensitive personal data - they should never leave your machine.
 
 **An exploratory proof-of-concept for structured data digestion between LLMs, AI agents, and document data.**
 
@@ -141,6 +144,22 @@ swift test                     # Run tests (67 passing)
 swift run HealthCheck --init   # Initialize database
 swift run HealthCheck          # Start MCP server
 ```
+
+## Privacy and Local LLMs
+
+This project exists because health data privacy matters. The entire design assumes your LLM runs locally on your own machine.
+
+**Why local LLMs only:**
+- Health records contain some of the most sensitive personal data there is - diagnoses, lab results, medications, allergies, mental health notes.
+- Cloud-hosted models (OpenAI, Anthropic, Google, xAI, etc.) send your prompts and tool call results to external servers. Even with privacy policies and data processing agreements, your medical data leaves your machine.
+- Local models keep everything on your hardware. The MCP server is local, the SQLite database is local, and the LLM is local. Nothing leaves your network.
+
+**Recommended local setups:**
+- [Ollama](https://ollama.com) - easiest way to run local models
+- [LM Studio](https://lmstudio.ai) - GUI for local model management
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) - lightweight C++ inference
+
+Any local model that supports MCP tool calling will work with this server.
 
 ## Status
 
