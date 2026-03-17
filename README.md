@@ -63,7 +63,7 @@ TextChunker (splits text using paragraph/section boundaries)
   ↓
 SQLite Database (18 relational tables: patients, encounters, labs, meds, etc.)
   ↓
-MCP Server (34 tools: ingestion, CRUD, query)
+MCP Server (37 tools: ingestion, CRUD, query)
   ↓
 AI Agent (reads document text → extracts structured data → answers questions)
 ```
